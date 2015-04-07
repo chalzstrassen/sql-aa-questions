@@ -32,13 +32,13 @@ class QuestionFollow
     FROM
       users AS u
     JOIN
-      question_likes AS ql
+      question_follows AS qf
     ON
-      u.id = ql.user_id
+      u.id = qf.user_id
     JOIN
       questions AS q
     ON
-      ql.question_id = q.id
+      qf.question_id = q.id
     WHERE
       q.id = ?
     SQL
@@ -53,13 +53,13 @@ class QuestionFollow
     FROM
       questions AS q
     JOIN
-      question_likes AS ql
+      question_follows AS qf
     ON
-      q.id = ql.question_id
+      q.id = qf.question_id
     JOIN
       users AS u
     ON
-      u.id = ql.user_id
+      u.id = qf.user_id
     WHERE
       u.id = ?
     SQL
@@ -67,6 +67,29 @@ class QuestionFollow
     results.map { |result| Question.new(result) }
   end
 
-  def self.most_follow_questions()
+  def self.most_followed_questions(n)
+    results = QuestionsDatabase.instance.execute(<<-SQL, n)
+    SELECT
+      q.id, q.title, q.body, q.user_id
+    FROM
+      questions AS q
+    JOIN
+      question_follows AS qf
+    ON
+      q.id = qf.question_id
+    JOIN
+      users AS u
+    ON
+      u.id = qf.user_id
+    GROUP BY
+      q.id
+    ORDER BY
+      COUNT(u.id)
+    LIMIT
+      ?
+    SQL
+
+    results.map { |result| Question.new(result) }
+  end
 
 end
